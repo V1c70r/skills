@@ -1,0 +1,95 @@
+// For format details, see https://aka.ms/devcontainer.json.
+//
+// Dev container for this skills repo: a plain Debian image plus Node (for the
+// changesets release tooling and scripts/*.mjs), the GitHub CLI (the skills
+// drive GitHub issues and PRs through `gh`), and Claude Code (to run the
+// skills and `claude plugin validate . --strict`).
+//
+// Git and SSH credentials are NOT mounted here on purpose: VS Code's dev
+// containers share them with the container automatically. It copies the host's
+// .gitconfig (user.name/user.email) in, and forwards the host ssh-agent, so
+// `git push` over SSH and signed commits work inside the container with the
+// host's keys. The private keys themselves never enter the image.
+{
+  "name": "mattpocock-skills",
+
+  // Generic Debian base. Runtimes come from features below rather than from a
+  // pre-baked `devcontainers/javascript-node` image, so each one stays a
+  // single declarative knob.
+  "image": "mcr.microsoft.com/devcontainers/base:trixie",
+
+  // The base image already declares `remoteUser: vscode` in its metadata, but
+  // pin it here explicitly: the mounts below hard-code /home/vscode, so the
+  // user must not silently drift to root.
+  "remoteUser": "vscode",
+
+  // see https://containers.dev/features
+  "features": {
+    // Node runtime; drives the `npm ci` step below. 22 matches the Release
+    // workflow (.github/workflows/release.yml), and npm is pinned to
+    // package.json's `packageManager` so package-lock.json is written the same
+    // way in the container as in CI. pnpm is not used here, so skip it.
+    "ghcr.io/devcontainers/features/node:2": {
+      "version": "22",
+      "npmVersion": "10.9.4",
+      "pnpmVersion": "none"
+    },
+    // GitHub CLI: `gh`, for the issues and PRs the skills create and read.
+    // It authenticates on its own (the forwarded ssh-agent covers `git push`,
+    // not `gh`), so it is paired with the ~/.config/gh mount below, which is
+    // what makes a `gh auth login` survive a rebuild.
+    "ghcr.io/devcontainers/features/github-cli:1": { "version": "latest" }
+  },
+
+  // Runs on the host before the container is created. A bind mount fails when
+  // its source is missing, so make sure the gh config dir exists first.
+  "initializeCommand": "mkdir -p \"$HOME/.gh-in-devcontainer\"",
+
+  "mounts": [
+    "source=${localEnv:HOME}/.claude-in-devcontainer,target=/home/vscode/.claude,type=bind",
+    "source=${localEnv:HOME}/.claude-in-devcontainer.json,target=/home/vscode/.claude.json,type=bind",
+    // gh's config dir, so `gh auth login` outlives a rebuild. gh keeps its
+    // token in a system keyring when one is reachable and falls back to plain
+    // ~/.config/gh/hosts.yml otherwise. A container has no keyring, so the
+    // token lands in this directory and persisting it is enough. Kept in its
+    // own host dir (not the host's ~/.config/gh) so the container's login
+    // stays separate, matching the .claude-in-devcontainer mounts above.
+    "source=${localEnv:HOME}/.gh-in-devcontainer,target=/home/vscode/.config/gh,type=bind"
+  ],
+
+  // Object form: each entry is a separately named command and they run in
+  // PARALLEL, so a dependency install cannot delay the Claude Code install (and
+  // a failure names the step that broke). Every entry must exit 0.
+  "postCreateCommand": {
+    // Install Claude Code with the official native installer rather than the
+    // claude-code devcontainer feature. That feature installs Claude Code
+    // globally via npm as root (under /usr/local/.../node_modules), which the
+    // non-root `vscode` user cannot write to, so the in-place auto-updater
+    // fails with `no_permissions`. The native installer drops a self-contained
+    // build under ~/.local (owned by `vscode`), so every path the updater
+    // touches (versions/, staging, locks, the launcher symlink) is
+    // user-writable and auto-update works without sudo. The `cc` alias then
+    // launches Claude Code with permission prompts bypassed.
+    "claude-code": "curl -fsSL https://claude.ai/install.sh | bash && echo \"alias cc='claude --dangerously-skip-permissions'\" >> ~/.bashrc",
+
+    // Node deps (the changesets CLI). `ci` (not `install`) so the container
+    // matches package-lock.json exactly.
+    "npm-ci": "npm ci"
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [],
+      "settings": {
+        // GitHub access inside the container goes through the forwarded
+        // host ssh-agent, so VS Code's own credential plumbing is dead
+        // weight: don't inject the editor's GitHub token for HTTPS
+        // github.com remotes, and don't wrap terminal git in
+        // GIT_ASKPASS. Git in the container behaves like git anywhere
+        // else: SSH key, or the usual credential.helper.
+        "github.gitAuthentication": false,
+        "git.terminalAuthentication": false
+      }
+    }
+  }
+}
