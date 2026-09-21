@@ -1,3 +1,17 @@
+## Fork
+
+This repo is a customized fork of [mattpocock/skills](https://github.com/mattpocock/skills) (upstream). Upstream changes get merged in regularly, so every change here is a minimal, merge-friendly diff against upstream:
+
+- Prefer a new file to an edit of an upstream file.
+- In an upstream file, change only the lines the customization needs: keep upstream's formatting, wrapping, ordering, and neighbouring code as they are.
+- Log every customization in [CUSTOMIZATIONLOG.md](./CUSTOMIZATIONLOG.md), in the same commit as the change. Merges from upstream (and their conflict resolutions) are not customizations.
+- `CHANGELOG.md`, `.changeset/`, and the versions in `package.json` and `.claude-plugin/plugin.json` belong to upstream: leave them untouched.
+- New skills go in `skills/custom/`: a flat-list `README.md` like `in-progress/`, no docs page, absent from the top-level `README.md` and `plugin.json`.
+- Customizing an existing upstream skill skips the docs-page re-sync described below.
+- `scripts/link-skills.sh` runs on the host machine, not in this devcontainer: after adding, removing, or renaming a skill, remind the user to re-run it there.
+
+## Upstream rules
+
 Skills are organized into bucket folders under `skills/`:
 
 - `engineering/`: daily code work
