@@ -8,7 +8,6 @@ This repo is a customized fork of [mattpocock/skills](https://github.com/mattpoc
 - `CHANGELOG.md`, `.changeset/`, and the versions in `package.json` and `.claude-plugin/plugin.json` belong to upstream: leave them untouched.
 - New skills go in `skills/custom/`: a flat-list `README.md` like `in-progress/`, no docs page, absent from the top-level `README.md` and `plugin.json`.
 - Customizing an existing upstream skill skips the docs-page re-sync described below.
-- `scripts/link-skills.sh` runs on the host machine, not in this devcontainer: after adding, removing, or renaming a skill, remind the user to re-run it there.
 
 ## Upstream rules
 
