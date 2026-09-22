@@ -4,6 +4,12 @@ Every way this fork diverges from [mattpocock/skills](https://github.com/mattpoc
 
 Each entry: `### YYYY-MM-DD: <title>`, then **Why**, **Files** (every path the change adds or edits), and **Status**: `active`, `upstreamed` (upstream now does the same), or `reverted`.
 
+### 2026-09-22: copy-skills.sh
+
+- **Why**: `link-skills.sh` symlinks point at this repo's path in this devcontainer, so they break in every other devcontainer that mounts the same `~/.claude`. Copies work in all of them.
+- **Files**: `scripts/copy-skills.sh` (new), `CLAUDE.md` (two bullets in the **Fork** section).
+- **Status**: active
+
 ### 2026-09-21: Fork rules in CLAUDE.md and this log
 
 - **Why**: record that this repo is a fork, and keep every divergence from upstream minimal, merge-friendly, and logged.

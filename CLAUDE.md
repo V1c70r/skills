@@ -8,6 +8,8 @@ This repo is a customized fork of [mattpocock/skills](https://github.com/mattpoc
 - `CHANGELOG.md`, `.changeset/`, and the versions in `package.json` and `.claude-plugin/plugin.json` belong to upstream: leave them untouched.
 - New skills go in `skills/custom/`: a flat-list `README.md` like `in-progress/`, no docs page, absent from the top-level `README.md` and `plugin.json`.
 - Customizing an existing upstream skill skips the docs-page re-sync described below.
+- **Never run `scripts/link-skills.sh`**, even where the upstream rules below say to: its symlinks break in the other devcontainers that share `~/.claude`. Install skills only with `scripts/copy-skills.sh`, whose copies work in all of them.
+- After adding, removing, renaming, or editing a skill, ask the user whether to run `scripts/copy-skills.sh` (and, after a removal or rename, whether to delete the old copy from `~/.claude/skills` and `~/.agents/skills`). Act only on a yes, and ask again after every change.
 
 ## Upstream rules
 
